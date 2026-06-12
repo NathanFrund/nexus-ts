@@ -3,6 +3,7 @@ import type { NxComponentAdded } from "./announcements.ts";
 import type { NxLocatable, NxIdentifiable } from "../types.ts";
 import { NxPosition } from "./components.ts";
 
+/** ECS entity with a component map, location tracking, and component-added announcements. */
 export class NxEntity implements NxLocatable, NxIdentifiable {
   id: string;
   components: Map<string, unknown> = new Map();

@@ -1,3 +1,4 @@
+/** Immutable result of a hazard check — whether it triggered and what message describes it. */
 export class NxHazardResult {
   occurred: boolean;
   severity: number;

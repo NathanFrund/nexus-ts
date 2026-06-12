@@ -1,3 +1,4 @@
+/** @module Core layer — property graph, world, agents, plugins, events. */
 export { NxNode } from "./node.ts";
 export { NxEdge } from "./edge.ts";
 export { NxGraph } from "./graph.ts";

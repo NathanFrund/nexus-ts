@@ -1,5 +1,6 @@
 import { type NxPlugin, NxBlockPlugin } from "./plugin.ts";
 
+/** A single hook slot running registered callbacks in sequence with a single typed context. */
 export class NxPluginHook<T = unknown> {
   readonly plugins: NxPlugin<T>[] = [];
 

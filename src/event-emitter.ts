@@ -1,11 +1,13 @@
 type Listener<T> = (event: T) => void | Promise<void>;
 
+/** Injectable event bus abstraction for decoupling producers from consumers. */
 export interface EventBus<EventMap extends Record<string, unknown>> {
   on<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): void;
   off<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): void;
   emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): void | Promise<void>;
 }
 
+/** Typed event emitter supporting sync and async listeners. Default implementation of `EventBus`. */
 export class EventEmitter<EventMap extends Record<string, unknown>>
   implements EventBus<EventMap> {
   private listeners = new Map<keyof EventMap, Set<Listener<unknown>>>();

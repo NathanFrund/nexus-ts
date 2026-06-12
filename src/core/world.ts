@@ -6,6 +6,7 @@ import { getDefaultRegistry } from "./plugin-registry.ts";
 import type { NxPluginRegistry } from "./plugin-registry.ts";
 import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
+/** The spatial world — owns a graph, tracks object locations, and manages pending witnessed events. */
 export class NxWorld {
   graph: NxGraph;
   agents: Map<string, NxSimpleAgent> = new Map();

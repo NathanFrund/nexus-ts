@@ -2,6 +2,7 @@ import type { NxEdge } from "./edge.ts";
 import type { NxWorld } from "./world.ts";
 import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
+/** Pipeline execution context capturing entity, target, world, and mutable per-step data. */
 export class NxMovementContext {
   entity: NxLocatable & NxIdentifiable;
   targetNode: string;

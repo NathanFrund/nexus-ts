@@ -2,6 +2,7 @@ import { NxPluginHook } from "./plugin-hook.ts";
 import type { NxPlugin } from "./plugin.ts";
 import type { NxMovementContext } from "./movement-context.ts";
 
+/** Maps each hook name to the context type its callbacks receive. Eliminates need for type casts at invocation sites. */
 export interface HookContextMap {
   validate: NxMovementContext;
   departure: NxMovementContext;
@@ -11,6 +12,7 @@ export interface HookContextMap {
   announce: NxMovementContext;
 }
 
+/** Registry of plugin hooks keyed by hook name. Supports injection for multi-world isolation. */
 export class NxPluginRegistry {
   private hooks = new Map<keyof HookContextMap, NxPluginHook<unknown>>();
 
@@ -39,6 +41,7 @@ export class NxPluginRegistry {
 
 let defaultRegistry: NxPluginRegistry | undefined;
 
+/** Returns the shared singleton default registry, creating it if needed. */
 export function getDefaultRegistry(): NxPluginRegistry {
   if (!defaultRegistry) {
     defaultRegistry = new NxPluginRegistry();
@@ -46,6 +49,7 @@ export function getDefaultRegistry(): NxPluginRegistry {
   return defaultRegistry;
 }
 
+/** Resets the shared default registry to a clean state (useful for testing). */
 export function resetDefaultRegistry(): void {
   defaultRegistry = undefined;
 }

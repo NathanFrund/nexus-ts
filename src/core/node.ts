@@ -2,6 +2,7 @@ import type { PropertyContainer } from "../types.ts";
 
 const RESERVED_PREFIX = "~";
 
+/** A graph node (vertex) in the spatial property graph. */
 export class NxNode implements PropertyContainer {
   readonly name: string;
   label: string;

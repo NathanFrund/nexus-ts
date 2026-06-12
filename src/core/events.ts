@@ -1,3 +1,4 @@
+/** Event recorded when a departure or arrival is witnessed (or not witnessed) by observers at a node. */
 export class NxWitnessedEvent {
   constructor(
     readonly eventType: string,
@@ -7,6 +8,7 @@ export class NxWitnessedEvent {
   ) {}
 }
 
+/** Hazard-specific event with severity and description metadata. */
 export class NxHazardEvent {
   target: string;
   severity: number;

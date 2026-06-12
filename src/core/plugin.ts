@@ -1,3 +1,4 @@
+/** Abstract base for a plugin that registers hook callbacks into one or more pipeline hooks. */
 export abstract class NxPlugin<T = unknown> {
   name: string;
   enabled: boolean;
@@ -22,6 +23,7 @@ export abstract class NxPlugin<T = unknown> {
   }
 }
 
+/** Concrete plugin that accepts inline callback functions via a block-style builder. */
 export class NxBlockPlugin<T = unknown> extends NxPlugin<T> {
   private action: (context: T) => void | Promise<void>;
 

@@ -6,6 +6,7 @@ import type {
   SerializedGraph,
 } from "../types.ts";
 
+/** Spatial graph — a named collection of nodes and edges with traversal queries. */
 export class NxGraph {
   readonly nodes: Map<string, NxNode> = new Map();
   readonly edges: NxEdge[] = [];

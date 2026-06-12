@@ -1,5 +1,6 @@
 import type { NxGraph } from "../core/graph.ts";
 
+/** Spatial position component — attaches an entity to a graph node and provides reachable-nodes query. */
 export class NxPosition {
   nodeName: string;
   graph: NxGraph;
@@ -16,6 +17,7 @@ export class NxPosition {
   }
 }
 
+/** Identity component — pairs an id with a human-readable name. */
 export class NxIdentity {
   id: string;
   name: string;

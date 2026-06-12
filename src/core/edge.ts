@@ -3,6 +3,7 @@ import type { EdgeDirection, PropertyContainer } from "../types.ts";
 const RESERVED_PREFIX = "~";
 const VALID_DIRECTIONS: EdgeDirection[] = ["both", "forward", "backward"];
 
+/** A directed or undirected edge in the spatial property graph, with optional distance/risk. */
 export class NxEdge implements PropertyContainer {
   node1: string;
   node2: string;

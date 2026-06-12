@@ -4,6 +4,7 @@ import { NxWitnessedEvent } from "../core/events.ts";
 import type { NxWorld } from "../core/world.ts";
 import type { NxArrivalEvent, NxDepartureEvent } from "./announcements.ts";
 
+/** Witness system — emits departure/arrival events to observers at the source/target nodes. */
 export class NxWitnessSystem {
   announcer: EventBus<{
     departure: NxDepartureEvent;

@@ -16,6 +16,7 @@ function getPosition(entity: unknown): NxPosition | undefined {
   return undefined;
 }
 
+/** Six-step async movement pipeline: validate → depart → hazard → move → arrive → announce. */
 export class NxMovementSystem {
   witnessSystem: NxWitnessSystem;
   announcer: EventBus<{
