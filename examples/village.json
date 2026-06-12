@@ -1,0 +1,91 @@
+{
+  "graphs": {
+    "village": {
+      "nodes": {
+        "village": {
+          "label": "Village Square"
+        },
+        "elderHut": {
+          "label": "Elder's Hut",
+          "properties": {
+            "npc": "Elder"
+          }
+        },
+        "forest": {
+          "label": "Forest Path",
+          "properties": {
+            "hazardLevel": "high"
+          }
+        },
+        "tavern": {
+          "label": "The Rusty Tankard",
+          "properties": {
+            "npc": "Bartender",
+            "heals": true
+          }
+        },
+        "graveyard": {
+          "label": "Old Graveyard",
+          "properties": {
+            "hazardLevel": "extreme"
+          }
+        }
+      },
+      "edges": [
+        {
+          "from": "village",
+          "to": "elderHut",
+          "distance": 1,
+          "risk": 0.0
+        },
+        {
+          "from": "village",
+          "to": "forest",
+          "distance": 2,
+          "risk": 0.3,
+          "direction": "backward"
+        },
+        {
+          "from": "village",
+          "to": "tavern",
+          "distance": 1,
+          "risk": 0.0
+        },
+        {
+          "from": "forest",
+          "to": "graveyard",
+          "distance": 3,
+          "risk": 0.8,
+          "direction": "forward"
+        }
+      ]
+    },
+    "dungeon": {
+      "nodes": {
+        "entrance": {
+          "label": "Dungeon Entrance"
+        },
+        "treasureRoom": {
+          "label": "Treasure Chamber",
+          "properties": {
+            "treasure": "Crown of Kings"
+          }
+        }
+      },
+      "edges": [
+        {
+          "from": "forest",
+          "to": "entrance",
+          "distance": 1,
+          "risk": 0.0
+        },
+        {
+          "from": "entrance",
+          "to": "treasureRoom",
+          "distance": 5,
+          "risk": 0.6
+        }
+      ]
+    }
+  }
+}
