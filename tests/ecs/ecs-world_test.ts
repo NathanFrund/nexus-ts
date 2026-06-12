@@ -16,7 +16,7 @@ Deno.test("NxECSWorld - arrival event generated on ECS movement", async () => {
 
   const world = new NxWorld(graph);
   const entity = new NxEntity("explorer");
-  entity.addComponent(new NxPosition("start", graph));
+  await entity.addComponent(new NxPosition("start", graph));
   world.addEntity(entity);
 
   const system = new NxMovementSystem();
@@ -45,7 +45,7 @@ Deno.test("NxECSWorld - departure event generated on ECS movement", async () => 
 
   const world = new NxWorld(graph);
   const entity = new NxEntity("explorer");
-  entity.addComponent(new NxPosition("start", graph));
+  await entity.addComponent(new NxPosition("start", graph));
   world.addEntity(entity);
 
   const system = new NxMovementSystem();
@@ -74,11 +74,11 @@ Deno.test("NxECSWorld - entity movement and witnessing", async () => {
 
   const world = new NxWorld(graph);
   const explorer = new NxEntity("explorer");
-  explorer.addComponent(new NxPosition("square", graph));
+  await explorer.addComponent(new NxPosition("square", graph));
   world.addEntity(explorer);
 
   const bystander = new NxEntity("bystander");
-  bystander.addComponent(new NxPosition("square", graph));
+  await bystander.addComponent(new NxPosition("square", graph));
   world.addEntity(bystander);
 
   const system = new NxMovementSystem();
@@ -112,7 +112,7 @@ Deno.test("NxECSWorld - no hazard with zero risk edge", async () => {
 
   const world = new NxWorld(graph);
   const entity = new NxEntity("e1");
-  entity.addComponent(new NxPosition("A", graph));
+  await entity.addComponent(new NxPosition("A", graph));
   world.addEntity(entity);
 
   const system = new NxMovementSystem();

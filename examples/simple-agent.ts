@@ -14,16 +14,10 @@ resetDefaultRegistry();
 
 // Register a hazard plugin that reports risky edges
 getDefaultRegistry().register("hazard", (ctx) => {
-  const edge = (ctx as { edge: { risk: number } }).edge;
-  if (edge.risk > 0.5) {
-    (ctx as { world: { pendingEvents: unknown[] }; targetNode: string }).world
-      .pendingEvents.push(
-        new NxHazardEvent(
-          (ctx as { targetNode: string }).targetNode,
-          edge.risk,
-          "You triggered a trap!",
-        ),
-      );
+  if (ctx.edge && ctx.edge.risk > 0.5) {
+    ctx.world.pendingEvents.push(
+      new NxHazardEvent(ctx.targetNode, ctx.edge.risk, "You triggered a trap!"),
+    );
   }
 });
 

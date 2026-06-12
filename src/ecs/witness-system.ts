@@ -1,19 +1,32 @@
 import { EventEmitter } from "../event-emitter.ts";
+import type { EventBus } from "../event-emitter.ts";
 import { NxWitnessedEvent } from "../core/events.ts";
 import type { NxWorld } from "../core/world.ts";
 import type { NxArrivalEvent, NxDepartureEvent } from "./announcements.ts";
 
 export class NxWitnessSystem {
-  announcer: EventEmitter<{
+  announcer: EventBus<{
     departure: NxDepartureEvent;
     arrival: NxArrivalEvent;
-  }> = new EventEmitter();
+  }>;
 
-  departEntity(
+  constructor(
+    eventBus?: EventBus<{
+      departure: NxDepartureEvent;
+      arrival: NxArrivalEvent;
+    }>,
+  ) {
+    this.announcer = eventBus ?? new EventEmitter<{
+      departure: NxDepartureEvent;
+      arrival: NxArrivalEvent;
+    }>();
+  }
+
+  async departEntity(
     entity: unknown,
     fromNode: string,
     world: NxWorld,
-  ): void {
+  ): Promise<void> {
     const observers = world.objectsAtNode(fromNode).filter(
       (o) => o !== entity,
     );
@@ -23,7 +36,7 @@ export class NxWitnessSystem {
         source: entity,
         location: fromNode,
       };
-      this.announcer.emit("departure", event);
+      await this.announcer.emit("departure", event);
       world.pendingEvents.push(
         new NxWitnessedEvent("departure", null, entity, fromNode),
       );
@@ -34,7 +47,7 @@ export class NxWitnessSystem {
           source: entity,
           location: fromNode,
         };
-        this.announcer.emit("departure", event);
+        await this.announcer.emit("departure", event);
         world.pendingEvents.push(
           new NxWitnessedEvent("departure", obs, entity, fromNode),
         );
@@ -42,11 +55,11 @@ export class NxWitnessSystem {
     }
   }
 
-  arriveEntity(
+  async arriveEntity(
     entity: unknown,
     atNode: string,
     world: NxWorld,
-  ): void {
+  ): Promise<void> {
     const observers = world.objectsAtNode(atNode).filter(
       (o) => o !== entity,
     );
@@ -56,7 +69,7 @@ export class NxWitnessSystem {
         source: entity,
         location: atNode,
       };
-      this.announcer.emit("arrival", event);
+      await this.announcer.emit("arrival", event);
       world.pendingEvents.push(
         new NxWitnessedEvent("arrival", null, entity, atNode),
       );
@@ -67,7 +80,7 @@ export class NxWitnessSystem {
           source: entity,
           location: atNode,
         };
-        this.announcer.emit("arrival", event);
+        await this.announcer.emit("arrival", event);
         world.pendingEvents.push(
           new NxWitnessedEvent("arrival", obs, entity, atNode),
         );

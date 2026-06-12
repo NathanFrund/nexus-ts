@@ -26,29 +26,27 @@ const world = new NxWorld(graph);
 
 // Create ECS entities
 const hero = new NxEntity("hero");
-hero.addComponent(new NxIdentity("hero", "Sir Lancelot"));
-hero.addComponent(new NxPosition("camp", graph));
+await hero.addComponent(new NxIdentity("hero", "Sir Lancelot"));
+await hero.addComponent(new NxPosition("camp", graph));
 world.addEntity(hero);
 
 const guard = new NxEntity("guard");
-guard.addComponent(new NxIdentity("guard", "Gate Guard"));
-guard.addComponent(new NxPosition("castle", graph));
+await guard.addComponent(new NxIdentity("guard", "Gate Guard"));
+await guard.addComponent(new NxPosition("castle", graph));
 world.addEntity(guard);
 
 console.log("=== ECS Game Demo ===");
 
 // Register a heal-at-camp plugin
 getDefaultRegistry().register("arrival", (ctx) => {
-  const target = (ctx as { targetNode: string }).targetNode;
-  if (target === "camp") {
+  if (ctx.targetNode === "camp") {
     console.log("You rest at camp and recover your strength.");
   }
 });
 
 // Register a bridge toll plugin
 getDefaultRegistry().register("validate", (ctx) => {
-  const target = (ctx as { targetNode: string }).targetNode;
-  if (target === "bridge") {
+  if (ctx.targetNode === "bridge") {
     console.log("The bridge keeper demands a toll!");
   }
 });

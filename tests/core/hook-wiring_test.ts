@@ -26,7 +26,7 @@ Deno.test("NxHookWiring - all 6 hooks execute in order during ECS movement", asy
 
   const world = new NxWorld(graph);
   const entity = new NxEntity("e1");
-  entity.addComponent(new NxPosition("start", graph));
+  await entity.addComponent(new NxPosition("start", graph));
   world.addEntity(entity);
 
   const system = new NxMovementSystem();

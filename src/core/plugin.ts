@@ -1,4 +1,4 @@
-export abstract class NxPlugin {
+export abstract class NxPlugin<T = unknown> {
   name: string;
   enabled: boolean;
 
@@ -7,7 +7,7 @@ export abstract class NxPlugin {
     this.enabled = true;
   }
 
-  abstract execute(context: unknown): void | Promise<void>;
+  abstract execute(context: T): void | Promise<void>;
 
   get description(): string {
     return `Plugin: ${this.name}`;
@@ -22,15 +22,15 @@ export abstract class NxPlugin {
   }
 }
 
-export class NxBlockPlugin extends NxPlugin {
-  private action: (context: unknown) => void | Promise<void>;
+export class NxBlockPlugin<T = unknown> extends NxPlugin<T> {
+  private action: (context: T) => void | Promise<void>;
 
-  constructor(action: (context: unknown) => void | Promise<void>) {
+  constructor(action: (context: T) => void | Promise<void>) {
     super(`block-${action.name || "anon"}`);
     this.action = action;
   }
 
-  execute(context: unknown): void | Promise<void> {
+  execute(context: T): void | Promise<void> {
     return this.action(context);
   }
 }

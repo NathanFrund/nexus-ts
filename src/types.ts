@@ -1,5 +1,13 @@
 export type EdgeDirection = "both" | "forward" | "backward";
 
+export interface NxLocatable {
+  location?: string;
+}
+
+export interface NxIdentifiable {
+  id: string;
+}
+
 export type NxHookName =
   | "validate"
   | "departure"

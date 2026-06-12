@@ -1,20 +1,33 @@
-import type { NxHookName } from "../types.ts";
-import type { NxPlugin } from "./plugin.ts";
 import { NxPluginHook } from "./plugin-hook.ts";
+import type { NxPlugin } from "./plugin.ts";
+import type { NxMovementContext } from "./movement-context.ts";
+
+export interface HookContextMap {
+  validate: NxMovementContext;
+  departure: NxMovementContext;
+  hazard: NxMovementContext;
+  spatialMove: NxMovementContext;
+  arrival: NxMovementContext;
+  announce: NxMovementContext;
+}
 
 export class NxPluginRegistry {
-  private hooks = new Map<NxHookName, NxPluginHook>();
+  private hooks = new Map<keyof HookContextMap, NxPluginHook<unknown>>();
 
-  hooksFor(hookName: NxHookName): NxPluginHook {
+  hooksFor<K extends keyof HookContextMap>(
+    hookName: K,
+  ): NxPluginHook<HookContextMap[K]> {
     if (!this.hooks.has(hookName)) {
-      this.hooks.set(hookName, new NxPluginHook());
+      this.hooks.set(hookName, new NxPluginHook<HookContextMap[K]>());
     }
-    return this.hooks.get(hookName)!;
+    return this.hooks.get(hookName)! as NxPluginHook<HookContextMap[K]>;
   }
 
-  register(
-    hookName: NxHookName,
-    plugin: NxPlugin | ((context: unknown) => void | Promise<void>),
+  register<K extends keyof HookContextMap>(
+    hookName: K,
+    plugin:
+      | NxPlugin<HookContextMap[K]>
+      | ((context: HookContextMap[K]) => void | Promise<void>),
   ): void {
     this.hooksFor(hookName).addPlugin(plugin);
   }

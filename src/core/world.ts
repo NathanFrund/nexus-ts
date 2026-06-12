@@ -3,34 +3,36 @@ import { NxSimpleAgent } from "./simple-agent.ts";
 import { NxMovementContext } from "./movement-context.ts";
 import { NxWitnessedEvent } from "./events.ts";
 import { getDefaultRegistry } from "./plugin-registry.ts";
+import type { NxPluginRegistry } from "./plugin-registry.ts";
+import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
 export class NxWorld {
   graph: NxGraph;
-  agents: Map<string, unknown> = new Map();
-  entities: Map<string, unknown> = new Map();
-  objects: Map<string, unknown> = new Map();
+  agents: Map<string, NxSimpleAgent> = new Map();
+  entities: Map<string, NxLocatable & NxIdentifiable> = new Map();
+  objects: Map<string, NxLocatable & NxIdentifiable> = new Map();
   objectLocation: Map<string, string> = new Map();
   pendingEvents: unknown[] = [];
   spatialIndex: Map<string, Set<string>> = new Map();
+  private registry: NxPluginRegistry;
 
-  constructor(graph?: NxGraph) {
+  constructor(graph?: NxGraph, registry?: NxPluginRegistry) {
     this.graph = graph ?? new NxGraph();
+    this.registry = registry ?? getDefaultRegistry();
   }
 
   agentsAtNode(nodeName: string): NxSimpleAgent[] {
     const result: NxSimpleAgent[] = [];
     for (const [, obj] of this.agents) {
-      if (
-        obj instanceof NxSimpleAgent && obj.location === nodeName
-      ) {
+      if (obj.location === nodeName) {
         result.push(obj);
       }
     }
     return result;
   }
 
-  entitiesAtNode(nodeName: string): unknown[] {
-    const result: unknown[] = [];
+  entitiesAtNode(nodeName: string): (NxLocatable & NxIdentifiable)[] {
+    const result: (NxLocatable & NxIdentifiable)[] = [];
     for (const [, obj] of this.entities) {
       if (this.resolveLocationOf(obj) === nodeName) {
         result.push(obj);
@@ -39,10 +41,10 @@ export class NxWorld {
     return result;
   }
 
-  objectsAtNode(nodeName: string): unknown[] {
+  objectsAtNode(nodeName: string): (NxLocatable & NxIdentifiable)[] {
     const ids = this.spatialIndex.get(nodeName);
     if (!ids || ids.size === 0) return [];
-    const result: unknown[] = [];
+    const result: (NxLocatable & NxIdentifiable)[] = [];
     for (const id of ids) {
       const obj = this.objects.get(id);
       if (obj) result.push(obj);
@@ -50,9 +52,8 @@ export class NxWorld {
     return result;
   }
 
-  addEntity(obj: unknown): void {
-    const id = this.resolveId(obj);
-    if (!id) throw new Error("Entity must have an id or be an NxSimpleAgent");
+  addEntity(obj: NxLocatable & NxIdentifiable): void {
+    const id = obj.id;
     this.objects.set(id, obj);
     if (obj instanceof NxSimpleAgent) {
       this.agents.set(id, obj);
@@ -62,56 +63,36 @@ export class NxWorld {
     this.registerObjectLocation(obj);
   }
 
-  removeEntity(obj: unknown): void {
-    const id = this.resolveId(obj);
-    if (!id) return;
+  removeEntity(obj: NxLocatable & NxIdentifiable): void {
+    const id = obj.id;
     this.removeObjectFromIndex(obj);
     this.objects.delete(id);
     this.agents.delete(id);
     this.entities.delete(id);
   }
 
-  registerObjectLocation(obj: unknown): void {
-    const location = this.resolveLocationOf(obj);
+  registerObjectLocation(obj: NxLocatable & NxIdentifiable): void {
+    const location = obj.location;
     if (location) {
-      const id = this.resolveId(obj);
-      if (id) {
-        if (!this.spatialIndex.has(location)) {
-          this.spatialIndex.set(location, new Set());
-        }
-        this.spatialIndex.get(location)!.add(id);
-        this.objectLocation.set(id, location);
+      const id = obj.id;
+      if (!this.spatialIndex.has(location)) {
+        this.spatialIndex.set(location, new Set());
       }
+      this.spatialIndex.get(location)!.add(id);
+      this.objectLocation.set(id, location);
     }
   }
 
-  resolveLocationOf(obj: unknown): string | undefined {
-    const components = (obj as Record<string, unknown>)["components"];
-    if (components instanceof Map) {
-      const pos = components.get("NxPosition") as
-        | { nodeName?: string }
-        | undefined;
-      if (pos?.nodeName) return pos.nodeName;
-    }
-    const location = (obj as Record<string, unknown>)["location"];
-    if (typeof location === "string") return location;
-    return undefined;
-  }
-
-  private resolveId(obj: unknown): string | undefined {
-    if (obj instanceof NxSimpleAgent) return obj.id;
-    const id = (obj as Record<string, unknown>)["id"];
-    if (typeof id === "string") return id;
-    return undefined;
+  resolveLocationOf(obj: NxLocatable): string | undefined {
+    return obj.location;
   }
 
   updateObjectLocation(
-    obj: unknown,
+    obj: NxLocatable & NxIdentifiable,
     fromNode: string | undefined,
     toNode: string,
   ): void {
-    const id = this.resolveId(obj);
-    if (!id) return;
+    const id = obj.id;
 
     if (fromNode) {
       const bucket = this.spatialIndex.get(fromNode);
@@ -128,9 +109,8 @@ export class NxWorld {
     this.objectLocation.set(id, toNode);
   }
 
-  removeObjectFromIndex(obj: unknown): void {
-    const id = this.resolveId(obj);
-    if (!id) return;
+  removeObjectFromIndex(obj: NxLocatable & NxIdentifiable): void {
+    const id = obj.id;
     const loc = this.objectLocation.get(id);
     if (loc) {
       const bucket = this.spatialIndex.get(loc);
@@ -156,8 +136,7 @@ export class NxWorld {
     const ctx = new NxMovementContext(agent, targetNode, this);
     ctx.edge = edge;
 
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("validate").runWith(ctx);
+    await this.registry.hooksFor("validate").runWith(ctx);
     if (!ctx.moveAllowed) return false;
 
     const witnesses = this.witnessedEventsFor(
@@ -169,13 +148,13 @@ export class NxWorld {
     for (const w of witnesses) {
       this.pendingEvents.push(w);
     }
-    await registry.hooksFor("departure").runWith(ctx);
-    await registry.hooksFor("hazard").runWith(ctx);
+    await this.registry.hooksFor("departure").runWith(ctx);
+    await this.registry.hooksFor("hazard").runWith(ctx);
 
     this.updateObjectLocation(agent, currentLocation, targetNode);
     agent.location = targetNode;
 
-    await registry.hooksFor("arrival").runWith(ctx);
+    await this.registry.hooksFor("arrival").runWith(ctx);
     return true;
   }
 

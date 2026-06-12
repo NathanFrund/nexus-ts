@@ -13,10 +13,9 @@ Deno.test("NxHazardPlugin - hazard occurs when risk is 1.0", async () => {
   const registry = getDefaultRegistry();
 
   registry.register("hazard", (ctx) => {
-    const ctxObj = ctx as { edge: { risk: number }; targetNode: string; world: { pendingEvents: unknown[] } };
-    if (ctxObj.edge.risk > 0) {
-      ctxObj.world.pendingEvents.push(
-        new NxHazardEvent(ctxObj.targetNode, ctxObj.edge.risk, "Rockfall!"),
+    if (ctx.edge && ctx.edge.risk > 0) {
+      ctx.world.pendingEvents.push(
+        new NxHazardEvent(ctx.targetNode, ctx.edge.risk, "Rockfall!"),
       );
     }
   });
@@ -28,7 +27,7 @@ Deno.test("NxHazardPlugin - hazard occurs when risk is 1.0", async () => {
 
   const world = new NxWorld(graph);
   const entity = new NxEntity("climber");
-  entity.addComponent(new NxPosition("top", graph));
+  await entity.addComponent(new NxPosition("top", graph));
   world.addEntity(entity);
 
   const system = new NxMovementSystem();

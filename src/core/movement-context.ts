@@ -1,22 +1,18 @@
 import type { NxEdge } from "./edge.ts";
-import type { NxGraph } from "./graph.ts";
-
-export interface HasLocation {
-  location?: string;
-  id?: string;
-}
+import type { NxWorld } from "./world.ts";
+import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
 export class NxMovementContext {
-  entity: unknown;
+  entity: NxLocatable & NxIdentifiable;
   targetNode: string;
-  world: { graph: NxGraph };
+  world: NxWorld;
   edge: NxEdge | null = null;
   private data = new Map<string, unknown>();
 
   constructor(
-    entity: unknown,
+    entity: NxLocatable & NxIdentifiable,
     targetNode: string,
-    world: { graph: NxGraph },
+    world: NxWorld,
   ) {
     this.entity = entity;
     this.targetNode = targetNode;

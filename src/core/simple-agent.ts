@@ -1,4 +1,6 @@
-export class NxSimpleAgent {
+import type { NxLocatable, NxIdentifiable } from "../types.ts";
+
+export class NxSimpleAgent implements NxLocatable, NxIdentifiable {
   id: string;
   name: string;
   location: string;

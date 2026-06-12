@@ -1,6 +1,13 @@
 type Listener<T> = (event: T) => void | Promise<void>;
 
-export class EventEmitter<EventMap extends Record<string, unknown>> {
+export interface EventBus<EventMap extends Record<string, unknown>> {
+  on<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): void;
+  off<K extends keyof EventMap>(event: K, listener: Listener<EventMap[K]>): void;
+  emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): void | Promise<void>;
+}
+
+export class EventEmitter<EventMap extends Record<string, unknown>>
+  implements EventBus<EventMap> {
   private listeners = new Map<keyof EventMap, Set<Listener<unknown>>>();
 
   on<K extends keyof EventMap>(
@@ -20,11 +27,18 @@ export class EventEmitter<EventMap extends Record<string, unknown>> {
     this.listeners.get(event)?.delete(listener as Listener<unknown>);
   }
 
-  emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): void {
+  async emit<K extends keyof EventMap>(event: K, payload: EventMap[K]): Promise<void> {
     const set = this.listeners.get(event);
     if (set) {
+      const promises: Promise<void>[] = [];
       for (const listener of set) {
-        listener(payload);
+        const result = listener(payload);
+        if (result instanceof Promise) {
+          promises.push(result);
+        }
+      }
+      if (promises.length > 0) {
+        await Promise.all(promises);
       }
     }
   }

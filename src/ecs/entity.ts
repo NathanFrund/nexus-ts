@@ -1,7 +1,9 @@
 import { EventEmitter } from "../event-emitter.ts";
 import type { NxComponentAdded } from "./announcements.ts";
+import type { NxLocatable, NxIdentifiable } from "../types.ts";
+import { NxPosition } from "./components.ts";
 
-export class NxEntity {
+export class NxEntity implements NxLocatable, NxIdentifiable {
   id: string;
   components: Map<string, unknown> = new Map();
   announcer: EventEmitter<{
@@ -12,17 +14,28 @@ export class NxEntity {
     this.id = id;
   }
 
-  addComponent(component: unknown): void {
+  get location(): string | undefined {
+    return this.componentOfType(NxPosition)?.nodeName;
+  }
+
+  set location(value: string) {
+    const pos = this.componentOfType(NxPosition);
+    if (pos) pos.nodeName = value;
+  }
+
+  async addComponent(component: unknown): Promise<void> {
     const key = (component as Record<string, unknown>).constructor?.name ??
       "unknown";
     this.components.set(key, component);
-    this.announcer.emit("componentAdded", {
+    await this.announcer.emit("componentAdded", {
       component,
       entity: this,
     } as NxComponentAdded);
   }
 
-  componentOfType<T>(type: abstract new (...args: never[]) => T): T | undefined {
+  componentOfType<T>(
+    type: abstract new (...args: never[]) => T,
+  ): T | undefined {
     const key = type.name;
     return this.components.get(key) as T | undefined;
   }

@@ -1,7 +1,9 @@
 import type { NxWorld } from "../core/world.ts";
 import { NxMovementContext } from "../core/movement-context.ts";
 import { getDefaultRegistry } from "../core/plugin-registry.ts";
+import type { NxPluginRegistry } from "../core/plugin-registry.ts";
 import { EventEmitter } from "../event-emitter.ts";
+import type { EventBus } from "../event-emitter.ts";
 import { NxWitnessSystem } from "./witness-system.ts";
 import { NxPosition } from "./components.ts";
 import { NxEntity } from "./entity.ts";
@@ -11,21 +13,27 @@ function getPosition(entity: unknown): NxPosition | undefined {
   if (entity instanceof NxEntity) {
     return entity.componentOfType(NxPosition);
   }
-  const pos = (entity as Record<string, unknown>)["position"];
-  if (pos instanceof NxPosition) return pos;
   return undefined;
 }
 
 export class NxMovementSystem {
-  witnessSystem: NxWitnessSystem = new NxWitnessSystem();
-  announcer: EventEmitter<{
+  witnessSystem: NxWitnessSystem;
+  announcer: EventBus<{
     entityMoved: NxEntityMoved;
-  }> = new EventEmitter();
+  }>;
+  private registry: NxPluginRegistry;
   private steps: Array<
     (ctx: NxMovementContext) => Promise<boolean>
   >;
 
-  constructor() {
+  constructor(
+    witnessSystem?: NxWitnessSystem,
+    eventBus?: EventBus<{ entityMoved: NxEntityMoved }>,
+    registry?: NxPluginRegistry,
+  ) {
+    this.witnessSystem = witnessSystem ?? new NxWitnessSystem();
+    this.announcer = eventBus ?? new EventEmitter<{ entityMoved: NxEntityMoved }>();
+    this.registry = registry ?? getDefaultRegistry();
     this.steps = [
       this.stepValidate.bind(this),
       this.stepDeparture.bind(this),
@@ -41,7 +49,11 @@ export class NxMovementSystem {
     targetNode: string,
     world: NxWorld,
   ): Promise<boolean> {
-    const ctx = new NxMovementContext(entity, targetNode, world);
+    const ctx = new NxMovementContext(
+      entity as import("../types.ts").NxLocatable & import("../types.ts").NxIdentifiable,
+      targetNode,
+      world,
+    );
     const pos = getPosition(entity);
     if (pos) {
       const current = pos.nodeName;
@@ -76,8 +88,7 @@ export class NxMovementSystem {
     if (!ctx.edge.allowsTraversalFrom(current)) return false;
 
     ctx.setData("moveAllowed", true);
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("validate").runWith(ctx);
+    await this.registry.hooksFor("validate").runWith(ctx);
     return ctx.moveAllowed;
   }
 
@@ -87,19 +98,17 @@ export class NxMovementSystem {
     const current = pos.nodeName;
 
     ctx.setData("previousNode", current);
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("departure").runWith(ctx);
-    this.witnessSystem.departEntity(
+    await this.registry.hooksFor("departure").runWith(ctx);
+    await this.witnessSystem.departEntity(
       ctx.entity,
       current,
-      ctx.world as unknown as NxWorld,
+      ctx.world,
     );
     return true;
   }
 
   private async stepHazard(ctx: NxMovementContext): Promise<boolean> {
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("hazard").runWith(ctx);
+    await this.registry.hooksFor("hazard").runWith(ctx);
     return true;
   }
 
@@ -110,34 +119,29 @@ export class NxMovementSystem {
     if (!pos) return false;
     const current = pos.nodeName;
 
-    const world = ctx.world as unknown as NxWorld;
-    world.updateObjectLocation(ctx.entity, current, ctx.targetNode);
+    ctx.world.updateObjectLocation(ctx.entity, current, ctx.targetNode);
     pos.nodeName = ctx.targetNode;
 
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("spatialMove").runWith(ctx);
+    await this.registry.hooksFor("spatialMove").runWith(ctx);
     return true;
   }
 
   private async stepArrival(ctx: NxMovementContext): Promise<boolean> {
-    const world = ctx.world as unknown as NxWorld;
-    this.witnessSystem.arriveEntity(
+    await this.witnessSystem.arriveEntity(
       ctx.entity,
       ctx.targetNode,
-      world,
+      ctx.world,
     );
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("arrival").runWith(ctx);
+    await this.registry.hooksFor("arrival").runWith(ctx);
     return true;
   }
 
   private async stepAnnounce(ctx: NxMovementContext): Promise<boolean> {
-    this.announcer.emit("entityMoved", {
+    await this.announcer.emit("entityMoved", {
       entity: ctx.entity,
       targetNode: ctx.targetNode,
     });
-    const registry = getDefaultRegistry();
-    await registry.hooksFor("announce").runWith(ctx);
+    await this.registry.hooksFor("announce").runWith(ctx);
     return true;
   }
 
