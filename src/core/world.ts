@@ -158,13 +158,8 @@ export class NxWorld {
     await this.registry.hooksFor("validate").runWith(ctx);
     if (!ctx.moveAllowed) return false;
 
-    const witnesses = this.witnessedEventsFor(
-      "departure",
-      currentLocation,
-      agent,
-    );
     this.pendingEvents = [];
-    for (const w of witnesses) {
+    for (const w of this.witnessedEventsFor("departure", currentLocation, agent)) {
       this.pendingEvents.push(w);
     }
     await this.registry.hooksFor("departure").runWith(ctx);
@@ -173,7 +168,13 @@ export class NxWorld {
     this.updateObjectLocation(agent, currentLocation, targetNode);
     agent.location = targetNode;
 
+    await this.registry.hooksFor("spatialMove").runWith(ctx);
     await this.registry.hooksFor("arrival").runWith(ctx);
+
+    for (const w of this.witnessedEventsFor("arrival", targetNode, agent)) {
+      this.pendingEvents.push(w);
+    }
+    await this.registry.hooksFor("announce").runWith(ctx);
     return true;
   }
 

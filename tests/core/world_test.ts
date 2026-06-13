@@ -68,13 +68,50 @@ Deno.test("NxWorld - move between named graphs", async () => {
 
   const world = new NxWorld(graph);
   const traveler = new NxSimpleAgent("t1", "Traveler", "square");
+  const villager = new NxSimpleAgent("v1", "Villager", "square");
   world.addEntity(traveler);
+  world.addEntity(villager);
 
+  // -- First move: traveler leaves square for gate, villager observes departure --
   const toGate = await world.moveAgent(traveler, "gate");
   assertEquals(toGate, true);
   assertEquals(traveler.location, "gate");
+  assertEquals(villager.location, "square");
 
+  const firstDepartures = world.pendingEvents.filter(
+    (e) => (e as Record<string, unknown>)["eventType"] === "departure",
+  ) as Array<Record<string, unknown>>;
+  assertEquals(firstDepartures.length, 1);
+  assertEquals(firstDepartures[0].observer, villager);
+  assertEquals(firstDepartures[0].source, traveler);
+  assertEquals(firstDepartures[0].location, "square");
+
+  const firstArrivals = world.pendingEvents.filter(
+    (e) => (e as Record<string, unknown>)["eventType"] === "arrival",
+  ) as Array<Record<string, unknown>>;
+  assertEquals(firstArrivals.length, 1);
+  assertEquals(firstArrivals[0].observer, null);
+  assertEquals(firstArrivals[0].source, traveler);
+  assertEquals(firstArrivals[0].location, "gate");
+
+  // -- Second move: traveler continues alone to crossroads, no one observes --
   const toCrossroads = await world.moveAgent(traveler, "crossroads");
   assertEquals(toCrossroads, true);
   assertEquals(traveler.location, "crossroads");
+
+  const secondDepartures = world.pendingEvents.filter(
+    (e) => (e as Record<string, unknown>)["eventType"] === "departure",
+  ) as Array<Record<string, unknown>>;
+  assertEquals(secondDepartures.length, 1);
+  assertEquals(secondDepartures[0].observer, null);
+  assertEquals(secondDepartures[0].source, traveler);
+  assertEquals(secondDepartures[0].location, "gate");
+
+  const secondArrivals = world.pendingEvents.filter(
+    (e) => (e as Record<string, unknown>)["eventType"] === "arrival",
+  ) as Array<Record<string, unknown>>;
+  assertEquals(secondArrivals.length, 1);
+  assertEquals(secondArrivals[0].observer, null);
+  assertEquals(secondArrivals[0].source, traveler);
+  assertEquals(secondArrivals[0].location, "crossroads");
 });
