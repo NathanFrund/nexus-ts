@@ -18,7 +18,9 @@ function getPosition(entity: unknown): NxPosition | undefined {
 
 /** Six-step async movement pipeline: validate → depart → hazard → move → arrive → announce. */
 export class NxMovementSystem {
+  /** Witness system for departure/arrival events. */
   witnessSystem: NxWitnessSystem;
+  /** Event bus for entity-moved announcements. */
   announcer: EventBus<{
     entityMoved: NxEntityMoved;
   }>;
@@ -27,6 +29,7 @@ export class NxMovementSystem {
     (ctx: NxMovementContext) => Promise<boolean>
   >;
 
+  /** Create a movement system with optional witness system, event bus, and plugin registry. */
   constructor(
     witnessSystem?: NxWitnessSystem,
     eventBus?: EventBus<{ entityMoved: NxEntityMoved }>,
@@ -45,6 +48,7 @@ export class NxMovementSystem {
     ];
   }
 
+  /** Move an entity to a target node through the full 6-step pipeline. Returns false if vetoed. */
   async moveEntity(
     entity: unknown,
     targetNode: string,
@@ -146,6 +150,7 @@ export class NxMovementSystem {
     return true;
   }
 
+  /** Register a listener for entity-moved events. */
   whenEntityMovedDo(
     listener: (event: NxEntityMoved) => void | Promise<void>,
   ): void {

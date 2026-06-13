@@ -8,20 +8,29 @@ import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
 /** The spatial world — owns a graph, tracks object locations, and manages pending witnessed events. */
 export class NxWorld {
+  /** The spatial graph. */
   graph: NxGraph;
+  /** Map of agent id to NxSimpleAgent. */
   agents: Map<string, NxSimpleAgent> = new Map();
+  /** Map of entity id to non-agent entities. */
   entities: Map<string, NxLocatable & NxIdentifiable> = new Map();
+  /** All entities (agents + non-agents) keyed by id. */
   objects: Map<string, NxLocatable & NxIdentifiable> = new Map();
+  /** Location cache: entity id → node name. */
   objectLocation: Map<string, string> = new Map();
+  /** Queue of witnessed events from recent movements. */
   pendingEvents: unknown[] = [];
+  /** Node name → Set of entity ids at that node. */
   spatialIndex: Map<string, Set<string>> = new Map();
   private registry: NxPluginRegistry;
 
+  /** Create a world with an optional graph and plugin registry. */
   constructor(graph?: NxGraph, registry?: NxPluginRegistry) {
     this.graph = graph ?? new NxGraph();
     this.registry = registry ?? getDefaultRegistry();
   }
 
+  /** All simple agents currently at the given node. */
   agentsAtNode(nodeName: string): NxSimpleAgent[] {
     const result: NxSimpleAgent[] = [];
     for (const [, obj] of this.agents) {
@@ -32,6 +41,7 @@ export class NxWorld {
     return result;
   }
 
+  /** All non-agent entities currently at the given node. */
   entitiesAtNode(nodeName: string): (NxLocatable & NxIdentifiable)[] {
     const result: (NxLocatable & NxIdentifiable)[] = [];
     for (const [, obj] of this.entities) {
@@ -42,6 +52,7 @@ export class NxWorld {
     return result;
   }
 
+  /** All entities (agents + non-agents) at the given node. */
   objectsAtNode(nodeName: string): (NxLocatable & NxIdentifiable)[] {
     const ids = this.spatialIndex.get(nodeName);
     if (!ids || ids.size === 0) return [];
@@ -53,6 +64,7 @@ export class NxWorld {
     return result;
   }
 
+  /** Register an entity/agent in the world and index its location. */
   addEntity(obj: NxLocatable & NxIdentifiable): void {
     const id = obj.id;
     this.objects.set(id, obj);
@@ -64,6 +76,7 @@ export class NxWorld {
     this.registerObjectLocation(obj);
   }
 
+  /** Remove an entity/agent from the world. */
   removeEntity(obj: NxLocatable & NxIdentifiable): void {
     const id = obj.id;
     this.removeObjectFromIndex(obj);
@@ -72,6 +85,7 @@ export class NxWorld {
     this.entities.delete(id);
   }
 
+  /** Add an entity to the spatial index at its current location. */
   registerObjectLocation(obj: NxLocatable & NxIdentifiable): void {
     const location = obj.location;
     if (location) {
@@ -84,10 +98,12 @@ export class NxWorld {
     }
   }
 
+  /** Read the current node name of a locatable object. */
   resolveLocationOf(obj: NxLocatable): string | undefined {
     return obj.location;
   }
 
+  /** Move an entity from one node to another in the spatial index. */
   updateObjectLocation(
     obj: NxLocatable & NxIdentifiable,
     fromNode: string | undefined,
@@ -110,6 +126,7 @@ export class NxWorld {
     this.objectLocation.set(id, toNode);
   }
 
+  /** Remove an entity from the spatial index entirely. */
   removeObjectFromIndex(obj: NxLocatable & NxIdentifiable): void {
     const id = obj.id;
     const loc = this.objectLocation.get(id);
@@ -123,6 +140,7 @@ export class NxWorld {
     this.objectLocation.delete(id);
   }
 
+  /** Move a simple agent to a target node via the inlined pipeline. */
   async moveAgent(
     agent: NxSimpleAgent,
     targetNode: string,
@@ -159,6 +177,7 @@ export class NxWorld {
     return true;
   }
 
+  /** Generate witnessed events for observers at a given node. */
   witnessedEventsFor(
     eventType: string,
     nodeName: string,

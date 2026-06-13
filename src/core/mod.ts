@@ -1,13 +1,12 @@
 /** @module Core layer — property graph, world, agents, plugins, events. */
-export { NxNode } from "./node.ts";
-export { NxEdge } from "./edge.ts";
-export { NxGraph } from "./graph.ts";
-export { NxMovementContext } from "./movement-context.ts";
-export { NxSimpleAgent } from "./simple-agent.ts";
-export { NxWorld } from "./world.ts";
-export { NxWitnessedEvent, NxHazardEvent } from "./events.ts";
-export { NxHazardResult } from "./hazard.ts";
-export { NxPlugin, NxBlockPlugin } from "./plugin.ts";
-export { NxPluginHook } from "./plugin-hook.ts";
-export { NxPluginRegistry, getDefaultRegistry, resetDefaultRegistry } from "./plugin-registry.ts";
-export type { HookContextMap } from "./plugin-registry.ts";
+export * from "./node.ts";
+export * from "./edge.ts";
+export * from "./graph.ts";
+export * from "./movement-context.ts";
+export * from "./simple-agent.ts";
+export * from "./world.ts";
+export * from "./events.ts";
+export * from "./hazard.ts";
+export * from "./plugin.ts";
+export * from "./plugin-hook.ts";
+export * from "./plugin-registry.ts";

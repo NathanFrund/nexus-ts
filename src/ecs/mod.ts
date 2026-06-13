@@ -1,11 +1,6 @@
 /** @module ECS layer — entities, components, movement pipeline, witness system. */
-export { NxEntity } from "./entity.ts";
-export { NxPosition, NxIdentity } from "./components.ts";
-export { NxMovementSystem } from "./movement-system.ts";
-export { NxWitnessSystem } from "./witness-system.ts";
-export type {
-  NxArrivalEvent,
-  NxDepartureEvent,
-  NxEntityMoved,
-  NxComponentAdded,
-} from "./announcements.ts";
+export * from "./entity.ts";
+export * from "./components.ts";
+export * from "./movement-system.ts";
+export * from "./witness-system.ts";
+export * from "./announcements.ts";

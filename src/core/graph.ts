@@ -8,13 +8,17 @@ import type {
 
 /** Spatial graph — a named collection of nodes and edges with traversal queries. */
 export class NxGraph {
+  /** Map of node name to NxNode. */
   readonly nodes: Map<string, NxNode> = new Map();
+  /** All edges in the graph. */
   readonly edges: NxEdge[] = [];
 
+  /** Add a node to the graph. */
   addNode(node: NxNode): void {
     this.nodes.set(node.name, node);
   }
 
+  /** Add an edge between two nodes with optional distance/risk/direction. */
   addEdge(
     from: string,
     to: string,
@@ -29,10 +33,12 @@ export class NxGraph {
     return edge;
   }
 
+  /** All node names in the graph. */
   get nodeNames(): string[] {
     return Array.from(this.nodes.keys());
   }
 
+  /** Look up a node by name; throws if not found. */
   nodeNamed(name: string): NxNode {
     const node = this.nodes.get(name);
     if (!node) {
@@ -41,16 +47,19 @@ export class NxGraph {
     return node;
   }
 
+  /** All edges connected to the given node. */
   edgesFrom(nodeName: string): NxEdge[] {
     return this.edges.filter((e) => e.connectsNode(nodeName));
   }
 
+  /** Node names reachable from the given node via traversable edges. */
   neighborsOf(nodeName: string): string[] {
     return this.edges
       .filter((e) => e.connectsNode(nodeName) && e.allowsTraversalFrom(nodeName))
       .map((e) => e.otherEndOf(nodeName));
   }
 
+  /** Serialize to a plain JSON object. */
   toJSON(): SerializedGraph {
     const nodes: SerializedGraph["nodes"] = {};
     for (const [name, node] of this.nodes) {
@@ -69,6 +78,7 @@ export class NxGraph {
     return { nodes, edges };
   }
 
+  /** Deserialize a single graph from a SerializedGraph object. */
   static fromJSON(data: SerializedGraph): NxGraph {
     const graph = new NxGraph();
     for (const [name, nodeData] of Object.entries(data.nodes)) {
@@ -90,6 +100,7 @@ export class NxGraph {
     return graph;
   }
 
+  /** Load a multi-graph hypergraph world, merging all graphs into one. */
   static loadWorld(data: HypergraphWorld): NxGraph {
     const graph = new NxGraph();
     for (const graphData of Object.values(data.graphs)) {

@@ -6,11 +6,13 @@ import type { NxArrivalEvent, NxDepartureEvent } from "./announcements.ts";
 
 /** Witness system — emits departure/arrival events to observers at the source/target nodes. */
 export class NxWitnessSystem {
+  /** Event bus for departure/arrival events. */
   announcer: EventBus<{
     departure: NxDepartureEvent;
     arrival: NxArrivalEvent;
   }>;
 
+  /** Create a witness system with optional injectable event bus. */
   constructor(
     eventBus?: EventBus<{
       departure: NxDepartureEvent;
@@ -23,6 +25,7 @@ export class NxWitnessSystem {
     }>();
   }
 
+  /** Emit departure events to observers at the source node. */
   async departEntity(
     entity: unknown,
     fromNode: string,
@@ -56,6 +59,7 @@ export class NxWitnessSystem {
     }
   }
 
+  /** Emit arrival events to observers at the target node. */
   async arriveEntity(
     entity: unknown,
     atNode: string,
@@ -89,12 +93,14 @@ export class NxWitnessSystem {
     }
   }
 
+  /** Register a listener for departure events. */
   whenDepartureHappensDo(
     listener: (event: NxDepartureEvent) => void | Promise<void>,
   ): void {
     this.announcer.on("departure", listener);
   }
 
+  /** Register a listener for arrival events. */
   whenArrivalHappensDo(
     listener: (event: NxArrivalEvent) => void | Promise<void>,
   ): void {
