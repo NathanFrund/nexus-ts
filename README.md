@@ -82,6 +82,29 @@ edge.toJSON();
 //   "~direction": "both", "encounterType": "bandits" }
 ```
 
+The full graph round-trips through `loadWorld` / `toWorldJSON`:
+
+```ts
+const data = JSON.parse(await Deno.readTextFile("world.json"));
+const graph = NxGraph.loadWorld(data);
+
+// ... modify graph ...
+
+const json = JSON.stringify(graph.toWorldJSON(), null, 2);
+await Deno.writeTextFile("world.json", json);
+```
+
+Combine multiple independent graphs into one hypergraph file:
+
+```ts
+const worldFile = {
+  graphs: {
+    ...overworld.toWorldJSON("overworld").graphs,
+    ...dungeon.toWorldJSON("dungeon").graphs,
+  },
+};
+```
+
 ## Plugin System
 
 Create a registry, register hooks, and inject it into the world or movement

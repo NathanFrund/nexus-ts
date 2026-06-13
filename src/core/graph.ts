@@ -59,6 +59,15 @@ export class NxGraph {
       .map((e) => e.otherEndOf(nodeName));
   }
 
+  /** Serialize to HypergraphWorld format (complement to loadWorld). */
+  toWorldJSON(graphName: string = "default"): HypergraphWorld {
+    return {
+      graphs: {
+        [graphName]: this.toJSON(),
+      },
+    };
+  }
+
   /** Serialize to a plain JSON object. */
   toJSON(): SerializedGraph {
     const nodes: SerializedGraph["nodes"] = {};
