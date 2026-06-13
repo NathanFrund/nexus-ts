@@ -1,6 +1,6 @@
 {
   "name": "@nathanfrund/nexus",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts",
