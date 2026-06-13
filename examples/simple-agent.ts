@@ -7,13 +7,11 @@
  * Usage: deno run --allow-read examples/simple-agent.ts
  */
 
-import { NxGraph, NxWorld, NxSimpleAgent, NxHazardEvent } from "../src/mod.ts";
-import { getDefaultRegistry, resetDefaultRegistry } from "../src/core/plugin-registry.ts";
+import { NxGraph, NxWorld, NxSimpleAgent, NxHazardEvent, NxPluginRegistry } from "../src/mod.ts";
 
-resetDefaultRegistry();
-
-// Register a hazard plugin that reports risky edges
-getDefaultRegistry().register("hazard", (ctx) => {
+// Create a plugin registry and register a hazard plugin
+const registry = new NxPluginRegistry();
+registry.register("hazard", (ctx) => {
   if (ctx.edge && ctx.edge.risk > 0.5) {
     ctx.world.pendingEvents.push(
       new NxHazardEvent(ctx.targetNode, ctx.edge.risk, "You triggered a trap!"),
@@ -23,7 +21,7 @@ getDefaultRegistry().register("hazard", (ctx) => {
 
 const jsonText = await Deno.readTextFile("examples/village.json");
 const graph = NxGraph.loadWorld(JSON.parse(jsonText));
-const world = new NxWorld(graph);
+const world = new NxWorld(graph, registry);
 
 const hero = new NxSimpleAgent("hero", "Hero", "village");
 world.addEntity(hero);
@@ -56,7 +54,7 @@ const witnesses = world.agentsAtNode("tavern").map((a) => a.name);
 console.log(`Agents at tavern: ${witnesses.join(", ")}`);
 
 // 5. Check for hazards on the move
-const hazards = world.pendingEvents.filter((e) => e instanceof NxHazardEvent);
+  const hazards = world.pendingEvents.filter((e) => e.kind === "hazard");
 if (hazards.length > 0) {
   console.log(`Hazards encountered: ${hazards.length}`);
 } else {

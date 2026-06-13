@@ -8,11 +8,8 @@
  * Usage: deno run --allow-read examples/ecs-game.ts
  */
 
-import { NxNode, NxGraph, NxWorld } from "../src/mod.ts";
+import { NxNode, NxGraph, NxWorld, NxPluginRegistry } from "../src/mod.ts";
 import { NxEntity, NxPosition, NxIdentity, NxMovementSystem } from "../src/ecs/mod.ts";
-import { getDefaultRegistry, resetDefaultRegistry } from "../src/core/plugin-registry.ts";
-
-resetDefaultRegistry();
 
 // Build a simple graph
 const graph = new NxGraph();
@@ -22,7 +19,8 @@ graph.addNode(new NxNode("castle", "Castle Gate"));
 graph.addEdge("camp", "bridge", { risk: 0.0 });
 graph.addEdge("bridge", "castle", { risk: 0.4 });
 
-const world = new NxWorld(graph);
+const registry = new NxPluginRegistry();
+const world = new NxWorld(graph, registry);
 
 // Create ECS entities
 const hero = new NxEntity("hero");
@@ -38,21 +36,21 @@ world.addEntity(guard);
 console.log("=== ECS Game Demo ===");
 
 // Register a heal-at-camp plugin
-getDefaultRegistry().register("arrival", (ctx) => {
+registry.register("arrival", (ctx) => {
   if (ctx.targetNode === "camp") {
     console.log("You rest at camp and recover your strength.");
   }
 });
 
 // Register a bridge toll plugin
-getDefaultRegistry().register("validate", (ctx) => {
+registry.register("validate", (ctx) => {
   if (ctx.targetNode === "bridge") {
     console.log("The bridge keeper demands a toll!");
   }
 });
 
 // Create the movement system and subscribe to events
-const system = new NxMovementSystem();
+const system = new NxMovementSystem(undefined, undefined, registry);
 
 system.witnessSystem.whenDepartureHappensDo((e) => {
   const name = (

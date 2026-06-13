@@ -1,9 +1,8 @@
 import { NxGraph } from "./graph.ts";
 import { NxSimpleAgent } from "./simple-agent.ts";
 import { NxMovementContext } from "./movement-context.ts";
-import { NxWitnessedEvent } from "./events.ts";
-import { getDefaultRegistry } from "./plugin-registry.ts";
-import type { NxPluginRegistry } from "./plugin-registry.ts";
+import { NxWitnessedEvent, type NxWorldEvent } from "./events.ts";
+import { NxPluginRegistry } from "./plugin-registry.ts";
 import type { NxLocatable, NxIdentifiable } from "../types.ts";
 
 /** The spatial world — owns a graph, tracks object locations, and manages pending witnessed events. */
@@ -18,8 +17,8 @@ export class NxWorld {
   objects: Map<string, NxLocatable & NxIdentifiable> = new Map();
   /** Location cache: entity id → node name. */
   objectLocation: Map<string, string> = new Map();
-  /** Queue of witnessed events from recent movements. */
-  pendingEvents: unknown[] = [];
+  /** Queue of events from recent movements (witnessed events + plugin-emitted hazard events). */
+  pendingEvents: NxWorldEvent[] = [];
   /** Node name → Set of entity ids at that node. */
   spatialIndex: Map<string, Set<string>> = new Map();
   private registry: NxPluginRegistry;
@@ -27,7 +26,25 @@ export class NxWorld {
   /** Create a world with an optional graph and plugin registry. */
   constructor(graph?: NxGraph, registry?: NxPluginRegistry) {
     this.graph = graph ?? new NxGraph();
-    this.registry = registry ?? getDefaultRegistry();
+    this.registry = registry ?? new NxPluginRegistry();
+  }
+
+  /** Start the world — calls onWorldStart on all registered plugins. */
+  async start(): Promise<void> {
+    for (const plugin of this.registry.allPlugins()) {
+      if (plugin.onWorldStart) {
+        await plugin.onWorldStart(this);
+      }
+    }
+  }
+
+  /** Stop the world — calls onWorldStop on all registered plugins. */
+  async stop(): Promise<void> {
+    for (const plugin of this.registry.allPlugins()) {
+      if (plugin.onWorldStop) {
+        await plugin.onWorldStop(this);
+      }
+    }
   }
 
   /** All simple agents currently at the given node. */

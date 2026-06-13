@@ -1,7 +1,7 @@
 import type { NxWorld } from "../core/world.ts";
 import { NxMovementContext } from "../core/movement-context.ts";
-import { getDefaultRegistry } from "../core/plugin-registry.ts";
-import type { NxPluginRegistry } from "../core/plugin-registry.ts";
+import { NxPluginRegistry } from "../core/plugin-registry.ts";
+import type { NxLocatable, NxIdentifiable } from "../types.ts";
 import { EventEmitter } from "../event-emitter.ts";
 import type { EventBus } from "../event-emitter.ts";
 import { NxWitnessSystem } from "./witness-system.ts";
@@ -37,7 +37,7 @@ export class NxMovementSystem {
   ) {
     this.witnessSystem = witnessSystem ?? new NxWitnessSystem();
     this.announcer = eventBus ?? new EventEmitter<{ entityMoved: NxEntityMoved }>();
-    this.registry = registry ?? getDefaultRegistry();
+    this.registry = registry ?? new NxPluginRegistry();
     this.steps = [
       this.stepValidate.bind(this),
       this.stepDeparture.bind(this),
@@ -50,15 +50,11 @@ export class NxMovementSystem {
 
   /** Move an entity to a target node through the full 6-step pipeline. Returns false if vetoed. */
   async moveEntity(
-    entity: unknown,
+    entity: NxLocatable & NxIdentifiable,
     targetNode: string,
     world: NxWorld,
   ): Promise<boolean> {
-    const ctx = new NxMovementContext(
-      entity as import("../types.ts").NxLocatable & import("../types.ts").NxIdentifiable,
-      targetNode,
-      world,
-    );
+    const ctx = new NxMovementContext(entity, targetNode, world);
     const pos = getPosition(entity);
     if (pos) {
       const current = pos.nodeName;
@@ -92,7 +88,6 @@ export class NxMovementSystem {
     }
     if (!ctx.edge.allowsTraversalFrom(current)) return false;
 
-    ctx.setData("moveAllowed", true);
     await this.registry.hooksFor("validate").runWith(ctx);
     return ctx.moveAllowed;
   }
@@ -102,7 +97,7 @@ export class NxMovementSystem {
     if (!pos) return false;
     const current = pos.nodeName;
 
-    ctx.setData("previousNode", current);
+    ctx.previousNode = current;
     await this.registry.hooksFor("departure").runWith(ctx);
     await this.witnessSystem.departEntity(
       ctx.entity,

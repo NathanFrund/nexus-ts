@@ -1,9 +1,9 @@
+import { NxWorldEvent, NxWitnessedEvent } from "../../src/core/events.ts";
 import { assertEquals } from "@std/assert";
 import { NxNode } from "../../src/core/node.ts";
 import { NxGraph } from "../../src/core/graph.ts";
 import { NxWorld } from "../../src/core/world.ts";
 import { NxSimpleAgent } from "../../src/core/simple-agent.ts";
-import { resetDefaultRegistry } from "../../src/core/plugin-registry.ts";
 
 Deno.test("NxWorld - agents at node", () => {
   const graph = new NxGraph();
@@ -23,7 +23,6 @@ Deno.test("NxWorld - agents at node", () => {
 });
 
 Deno.test("NxWorld - witnessed events on simple agent move", async () => {
-  resetDefaultRegistry();
   const graph = new NxGraph();
   graph.addNode(new NxNode("village"));
   graph.addNode(new NxNode("forest"));
@@ -40,14 +39,12 @@ Deno.test("NxWorld - witnessed events on simple agent move", async () => {
   assertEquals(thug.location, "forest");
 
   const departures = world.pendingEvents.filter(
-    (e: unknown) =>
-      (e as Record<string, unknown>)["eventType"] === "departure",
+    (e): e is NxWorldEvent => e.kind === "witness" && e.eventType === "departure",
   );
   assertEquals(departures.length, 1);
 });
 
 Deno.test("NxWorld - move between named graphs", async () => {
-  resetDefaultRegistry();
   const graph = NxGraph.loadWorld({
     graphs: {
       village: {
@@ -79,16 +76,16 @@ Deno.test("NxWorld - move between named graphs", async () => {
   assertEquals(villager.location, "square");
 
   const firstDepartures = world.pendingEvents.filter(
-    (e) => (e as Record<string, unknown>)["eventType"] === "departure",
-  ) as Array<Record<string, unknown>>;
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "departure",
+  );
   assertEquals(firstDepartures.length, 1);
   assertEquals(firstDepartures[0].observer, villager);
   assertEquals(firstDepartures[0].source, traveler);
   assertEquals(firstDepartures[0].location, "square");
 
   const firstArrivals = world.pendingEvents.filter(
-    (e) => (e as Record<string, unknown>)["eventType"] === "arrival",
-  ) as Array<Record<string, unknown>>;
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "arrival",
+  );
   assertEquals(firstArrivals.length, 1);
   assertEquals(firstArrivals[0].observer, null);
   assertEquals(firstArrivals[0].source, traveler);
@@ -100,16 +97,16 @@ Deno.test("NxWorld - move between named graphs", async () => {
   assertEquals(traveler.location, "crossroads");
 
   const secondDepartures = world.pendingEvents.filter(
-    (e) => (e as Record<string, unknown>)["eventType"] === "departure",
-  ) as Array<Record<string, unknown>>;
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "departure",
+  );
   assertEquals(secondDepartures.length, 1);
   assertEquals(secondDepartures[0].observer, null);
   assertEquals(secondDepartures[0].source, traveler);
   assertEquals(secondDepartures[0].location, "gate");
 
   const secondArrivals = world.pendingEvents.filter(
-    (e) => (e as Record<string, unknown>)["eventType"] === "arrival",
-  ) as Array<Record<string, unknown>>;
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "arrival",
+  );
   assertEquals(secondArrivals.length, 1);
   assertEquals(secondArrivals[0].observer, null);
   assertEquals(secondArrivals[0].source, traveler);

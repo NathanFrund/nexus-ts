@@ -14,6 +14,11 @@ export abstract class NxPlugin<T = unknown> {
   /** Execute this plugin with the given context. */
   abstract execute(context: T): void | Promise<void>;
 
+  /** Called when the world starts. */
+  onWorldStart?(world: unknown): void | Promise<void>;
+  /** Called when the world stops. */
+  onWorldStop?(world: unknown): void | Promise<void>;
+
   /** Human-readable description. */
   get description(): string {
     return `Plugin: ${this.name}`;

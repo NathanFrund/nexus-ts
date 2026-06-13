@@ -7,12 +7,11 @@ import { NxEntity } from "../../src/ecs/entity.ts";
 import { NxPosition } from "../../src/ecs/components.ts";
 import { NxMovementSystem } from "../../src/ecs/movement-system.ts";
 import { ALL_HOOKS } from "../../src/types.ts";
-import { getDefaultRegistry, resetDefaultRegistry } from "../../src/core/plugin-registry.ts";
+import { NxPluginRegistry } from "../../src/core/plugin-registry.ts";
 
 Deno.test("NxHookWiring - all 6 hooks execute in order during ECS movement", async () => {
-  resetDefaultRegistry();
   const order: string[] = [];
-  const registry = getDefaultRegistry();
+  const registry = new NxPluginRegistry();
 
   for (const hook of ALL_HOOKS) {
     registry.register(hook, () => {
@@ -25,12 +24,12 @@ Deno.test("NxHookWiring - all 6 hooks execute in order during ECS movement", asy
   graph.addNode(new NxNode("end"));
   graph.addEdge("start", "end");
 
-  const world = new NxWorld(graph);
+  const world = new NxWorld(graph, registry);
   const entity = new NxEntity("e1");
   await entity.addComponent(new NxPosition("start", graph));
   world.addEntity(entity);
 
-  const system = new NxMovementSystem();
+  const system = new NxMovementSystem(undefined, undefined, registry);
   const result = await system.moveEntity(entity, "end", world);
   assertEquals(result, true);
 
@@ -45,9 +44,8 @@ Deno.test("NxHookWiring - all 6 hooks execute in order during ECS movement", asy
 });
 
 Deno.test("NxHookWiring - all 6 hooks execute in order during simple agent move", async () => {
-  resetDefaultRegistry();
   const order: string[] = [];
-  const registry = getDefaultRegistry();
+  const registry = new NxPluginRegistry();
 
   for (const hook of ALL_HOOKS) {
     registry.register(hook, () => {
@@ -60,7 +58,7 @@ Deno.test("NxHookWiring - all 6 hooks execute in order during simple agent move"
   graph.addNode(new NxNode("B"));
   graph.addEdge("A", "B");
 
-  const world = new NxWorld(graph);
+  const world = new NxWorld(graph, registry);
   const hero = new NxSimpleAgent("hero", "Hero", "A");
   world.addEntity(hero);
 

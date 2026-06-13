@@ -5,10 +5,9 @@ import { NxWorld } from "../../src/core/world.ts";
 import { NxEntity } from "../../src/ecs/entity.ts";
 import { NxPosition } from "../../src/ecs/components.ts";
 import { NxMovementSystem } from "../../src/ecs/movement-system.ts";
-import { resetDefaultRegistry } from "../../src/core/plugin-registry.ts";
+import { NxWitnessedEvent } from "../../src/core/events.ts";
 
 Deno.test("NxECSWorld - arrival event generated on ECS movement", async () => {
-  resetDefaultRegistry();
   const graph = new NxGraph();
   graph.addNode(new NxNode("start"));
   graph.addNode(new NxNode("end"));
@@ -37,7 +36,6 @@ Deno.test("NxECSWorld - arrival event generated on ECS movement", async () => {
 });
 
 Deno.test("NxECSWorld - departure event generated on ECS movement", async () => {
-  resetDefaultRegistry();
   const graph = new NxGraph();
   graph.addNode(new NxNode("start"));
   graph.addNode(new NxNode("end"));
@@ -66,7 +64,6 @@ Deno.test("NxECSWorld - departure event generated on ECS movement", async () => 
 });
 
 Deno.test("NxECSWorld - entity movement and witnessing", async () => {
-  resetDefaultRegistry();
   const graph = new NxGraph();
   graph.addNode(new NxNode("square"));
   graph.addNode(new NxNode("hut"));
@@ -86,25 +83,22 @@ Deno.test("NxECSWorld - entity movement and witnessing", async () => {
   assertEquals(result, true);
 
   const departures = world.pendingEvents.filter(
-    (e: unknown) =>
-      (e as Record<string, unknown>)["eventType"] === "departure",
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "departure",
   );
   const arrivals = world.pendingEvents.filter(
-    (e: unknown) =>
-      (e as Record<string, unknown>)["eventType"] === "arrival",
+    (e): e is NxWitnessedEvent => e.kind === "witness" && e.eventType === "arrival",
   );
 
   assertEquals(departures.length, 1);
   assertEquals(arrivals.length, 1);
 
-  const dep = departures[0] as Record<string, unknown>;
+  const dep = departures[0];
   assertEquals(dep.location, "square");
   assertEquals(dep.observer, bystander);
   assertEquals(dep.source, explorer);
 });
 
 Deno.test("NxECSWorld - no hazard with zero risk edge", async () => {
-  resetDefaultRegistry();
   const graph = new NxGraph();
   graph.addNode(new NxNode("A"));
   graph.addNode(new NxNode("B"));

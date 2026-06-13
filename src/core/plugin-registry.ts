@@ -42,23 +42,19 @@ export class NxPluginRegistry {
     this.hooksFor(hookName).addPlugin(plugin);
   }
 
+  /** Collect all registered plugins from every hook. */
+  allPlugins(): NxPlugin<unknown>[] {
+    const result: NxPlugin<unknown>[] = [];
+    for (const hook of this.hooks.values()) {
+      for (const plugin of hook.plugins) {
+        result.push(plugin);
+      }
+    }
+    return result;
+  }
+
   /** Remove all registered hooks and plugins. */
   clear(): void {
     this.hooks.clear();
   }
-}
-
-let defaultRegistry: NxPluginRegistry | undefined;
-
-/** Returns the shared singleton default registry, creating it if needed. */
-export function getDefaultRegistry(): NxPluginRegistry {
-  if (!defaultRegistry) {
-    defaultRegistry = new NxPluginRegistry();
-  }
-  return defaultRegistry;
-}
-
-/** Resets the shared default registry to a clean state (useful for testing). */
-export function resetDefaultRegistry(): void {
-  defaultRegistry = undefined;
 }

@@ -12,7 +12,10 @@ export class NxMovementContext {
   world: NxWorld;
   /** The edge being traversed, if known. */
   edge: NxEdge | null = null;
-  private data = new Map<string, unknown>();
+  /** Previous node name before the move (set by departure step). */
+  previousNode: string | undefined;
+  private _moveAllowed = true;
+  private pluginData = new Map<string, unknown>();
 
   /** Create a movement context for an entity moving to targetNode within world. */
   constructor(
@@ -27,27 +30,27 @@ export class NxMovementContext {
 
   /** Whether the move is still allowed (one-way veto latch, default true). */
   get moveAllowed(): boolean {
-    return (this.data.get("moveAllowed") as boolean) ?? true;
+    return this._moveAllowed;
   }
 
   /** Veto the move. Once set to false, stays false (one-way latch). */
   set moveAllowed(value: boolean) {
-    this.data.set("moveAllowed", this.moveAllowed && value);
+    this._moveAllowed = this._moveAllowed && value;
   }
 
-  /** Read custom per-step data by key. */
-  getData<T = unknown>(key: string): T | undefined;
-  /** Read custom per-step data with fallback. */
-  getData<T = unknown>(key: string, fallback: T): T;
-  getData<T = unknown>(key: string, fallback?: T): T | undefined {
-    if (this.data.has(key)) {
-      return this.data.get(key) as T;
+  /** Read plugin-scoped data by key. */
+  getPluginData<T = unknown>(key: string): T | undefined;
+  /** Read plugin-scoped data with fallback. */
+  getPluginData<T = unknown>(key: string, fallback: T): T;
+  getPluginData<T = unknown>(key: string, fallback?: T): T | undefined {
+    if (this.pluginData.has(key)) {
+      return this.pluginData.get(key) as T;
     }
     return fallback;
   }
 
-  /** Store custom per-step data. */
-  setData(key: string, value: unknown): void {
-    this.data.set(key, value);
+  /** Store plugin-scoped data for cross-hook communication. */
+  setPluginData(key: string, value: unknown): void {
+    this.pluginData.set(key, value);
   }
 }
